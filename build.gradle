@@ -1,0 +1,121 @@
+plugins {
+	id 'net.fabricmc.fabric-loom' version "${loom_version}"
+}
+
+// The Minecraft version comes from versions/<mc>.properties (default in gradle.properties): gradlew build -Pmc=26.2
+def mcVersion = providers.gradleProperty('mc').get()
+def versionFile = file("versions/${mcVersion}.properties")
+if (!versionFile.exists()) {
+	def known = file('versions').list().collect { it - '.properties' }.sort().join(', ')
+	throw new GradleException("No versions/${mcVersion}.properties. Known versions: ${known}")
+}
+def versionProps = new Properties()
+versionFile.withInputStream { versionProps.load(it) }
+versionProps.each { key, value -> project.ext.set(key, value) }
+version = "${project.mod_version}+${project.minecraft_version}"
+
+sourceSets {
+	main {
+		java {
+			// the few classes that differ between Minecraft versions
+			srcDir "src/${project.source_set}/java"
+		}
+	}
+}
+
+loom {
+	runs {
+		configureEach {
+			// a separate game folder per Minecraft version
+			runDir "run/${mcVersion}"
+		}
+	}
+}
+
+repositories {
+	// Mod Menu and Xaero's Minimap, from Modrinth's Maven
+	exclusiveContent {
+		forRepository {
+			maven {
+				name = 'Modrinth'
+				url = 'https://api.modrinth.com/maven'
+			}
+		}
+		filter {
+			includeGroup 'maven.modrinth'
+		}
+	}
+	mavenCentral()
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+
+	// Only needed to compile; players install Mod Menu and Xaero's Minimap themselves (both optional).
+	compileOnly "maven.modrinth:modmenu:${project.modmenu_version}"
+	compileOnly "maven.modrinth:xaeros-minimap:fabric-${project.minecraft_version}-${project.minimap_version}"
+
+	testImplementation platform("org.junit:junit-bom:${project.junit_version}")
+	testImplementation "org.junit.jupiter:junit-jupiter"
+	testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+}
+
+test {
+	useJUnitPlatform()
+}
+
+processResources {
+	// the Fabric API version in fabric.mod.json is the one this mod is compiled against
+	def props = [
+		"version": project.version,
+		"minecraft_range": project.minecraft_range,
+		"fabric_api_version": project.fabric_api_version
+	]
+	inputs.properties props
+
+	filesMatching("fabric.mod.json") {
+		expand props
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 25
+	it.options.encoding = 'UTF-8'
+}
+
+java {
+	withSourcesJar()
+	sourceCompatibility = JavaVersion.VERSION_25
+	targetCompatibility = JavaVersion.VERSION_25
+}
+
+jar {
+	def projectName = project.name
+	inputs.property "projectName", projectName
+
+	from("LICENSE") {
+		rename { "${it}_$projectName" }
+	}
+}
+
+// Every build also puts the jar into the shared builds/<minecraft version>/ folder next to the mod folders
+// (C:/.../mods/builds/26.2/...), replacing older builds of this mod there, so it always holds the newest jars.
+def buildsDir = file("../builds/${project.minecraft_version}")
+def modJar = tasks.named('jar').flatMap { it.archiveFile }
+def modName = base.archivesName.get()
+def copyToBuilds = tasks.register('copyToBuilds') {
+	group = 'build'
+	description = 'Copies the jar to ../builds/<minecraft version>/ and removes older builds of this mod there.'
+	inputs.file(modJar)
+	doLast {
+		buildsDir.mkdirs()
+		buildsDir.listFiles().findAll { it.name.startsWith("${modName}-") && it.name.endsWith('.jar') }*.delete()
+		def jarFile = modJar.get().asFile
+		java.nio.file.Files.copy(jarFile.toPath(), new File(buildsDir, jarFile.name).toPath(),
+			java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+		logger.lifecycle("Copied ${jarFile.name} to ${buildsDir}")
+	}
+}
+tasks.named('build') { finalizedBy copyToBuilds }

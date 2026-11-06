@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "id": "compasstri",
+  "version": "${version}",
+  "name": "Compass Triangulator",
+  "description": "Finds where a lodestone compass points: shows its direction to a tenth of a degree, takes readings from different places (also from a compass shown in a screen, such as an auction house) and crosses them into an estimated position with an error margin.",
+  "license": "MIT",
+  "authors": ["StarWWW"],
+  "contact": {
+    "homepage": "https://github.com/StarWWW/compass-triangulator",
+    "sources": "https://github.com/StarWWW/compass-triangulator",
+    "issues": "https://github.com/StarWWW/compass-triangulator/issues"
+  },
+  "icon": "assets/compasstri/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "compasstri.CompassTriMod"
+    ],
+    "modmenu": [
+      "compasstri.compat.ModMenuIntegration"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.0",
+    "minecraft": "${minecraft_range}",
+    "java": ">=25",
+    "fabric-api": ">=${fabric_api_version}"
+  },
+  "suggests": {
+    "modmenu": "*",
+    "xaerominimap": "*"
+  }
+}
