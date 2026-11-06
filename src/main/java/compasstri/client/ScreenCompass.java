@@ -9,6 +9,8 @@ import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenKeyboardEvents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.input.KeyEvent;
@@ -25,6 +27,11 @@ import java.util.List;
  * the compass points (its stored target, and the direction and distance from where the player stands), and while the
  * mouse is over one, the "record a reading" key takes a reading from it. So the compass never has to be held: open
  * the screen at a few places far apart (e.g. after random teleports), and record each time.
+ * <p>
+ * Besides chest-like screens this works in any screen that shows a compass, such as a server's confirmation dialog
+ * (DonutSMP: right-click a listing, "Are you sure you want to buy this?"), which is where some servers name the
+ * seller. There the keys are only taken while the mouse is over a compass, so they still reach the screen otherwise
+ * (in the Controls screen, for one). The chat is left out.
  */
 public final class ScreenCompass {
     /** A tooltip drawn this recently means the mouse is still over that compass. */
@@ -41,7 +48,7 @@ public final class ScreenCompass {
     public static void register() {
         ItemTooltipCallback.EVENT.register((stack, context, flag, lines) -> tooltip(stack, lines));
         ScreenEvents.AFTER_INIT.register((client, screen, width, height) -> {
-            if (!(screen instanceof AbstractContainerScreen<?>)) return;
+            if (screen instanceof ChatScreen) return;
             // only our keys are taken; every other key still goes to the screen
             ScreenKeyboardEvents.allowKeyPress(screen).register((s, event) -> !keyPressed(s, event));
         });
@@ -53,7 +60,8 @@ public final class ScreenCompass {
         if (player == null) return;
         HeldCompass compass = HeldCompass.of(stack, player);
         if (compass == null) return;
-        boolean inScreen = screen(mc) instanceof AbstractContainerScreen<?>;
+        Screen screen = screen(mc);
+        boolean inScreen = screen != null && !(screen instanceof ChatScreen);
         if (inScreen) {
             hovered = stack;
             hoveredAt = System.currentTimeMillis();
@@ -109,6 +117,10 @@ public final class ScreenCompass {
         Minecraft mc = Minecraft.getInstance();
         LocalPlayer player = mc.player;
         if (player == null) return false;
+        // typing into a text box in the screen
+        if (screen.getFocused() instanceof EditBox) return false;
+        boolean overCompass = hovered != null && System.currentTimeMillis() - hoveredAt <= HOVER_MS;
+        if (!(screen instanceof AbstractContainerScreen<?>) && !overCompass) return false;
         if (CompassTriMod.UNDO_KEY.matches(event)) {
             if (Readings.undo()) player.sendSystemMessage(Component.translatable("compasstri.msg.undone", Readings.entries().size()));
             return true;

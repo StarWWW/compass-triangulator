@@ -35,6 +35,20 @@ class ListingTest {
     }
 
     @Test
+    void ranksAreSkipped() {
+        assertEquals("Notch", parse("Seller: [VIP] Notch").seller());
+        assertEquals(".BedrockGuy", parse("Satıcı » [+] .BedrockGuy").seller());
+        assertNull(parse("Seller: [VIP]").seller());
+    }
+
+    @Test
+    void donutConfirmationWindow() {
+        // DonutSMP's "Are you sure you want to buy this?" window
+        Listing l = parse("Price: 100M", "Seller: _Restrict", "Time Left: 11h 40m");
+        assertEquals("_Restrict Lodestone 100M", l.waypointName());
+    }
+
+    @Test
     void anAmountWithoutALabel() {
         Listing l = parse("Click to buy", "$12.3M each");
         assertNull(l.seller());

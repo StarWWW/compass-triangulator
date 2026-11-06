@@ -26,6 +26,8 @@ Sunucu iğneyi kendi kaynak paketiyle çiziyorsa ve pusulada hedef yoksa **bakar
 
 Ölçümler sadece tuşla alınır (fareyle üstüne gelmek yetmez), böylece ekrandaki başka pusulalar ölçümlere karışmaz. Başka bir pusulaya geçmeden önce `/compasstri clear` ile ölçümleri temizle.
 
+Bu sadece sandık benzeri ekranlarda değil, pusula gösteren her ekranda çalışır (sohbet hariç), sunucunun açtığı onay pencereleri de buna dahil. Böyle ekranlarda modun tuşları sadece fare bir pusulanın üstündeyken alınır; fare başka yerdeyken tuşlar ekrana gider. Ekrandaki bir yazı kutusuna yazarken de tuşlar ekrana gider.
+
 ### Xaero haritasına waypoint olarak
 
 Xaero's Minimap kuruluysa (Xaero's World Map da aynı waypoint'leri gösterir), Kontroller'den **Xaero waypoint'i olarak ekle** tuşunu ata:
@@ -35,7 +37,9 @@ Xaero's Minimap kuruluysa (Xaero's World Map da aynı waypoint'leri gösterir), 
 
 Waypoint, bulunduğun dünya ve boyutun o an seçili waypoint setine, mor renkte ve `L` kısaltmasıyla eklenir ve Xaero'nun kendi dosyasına kaydedilir. Aynı koordinatta zaten bir waypoint varsa ikincisi eklenmez, adı güncellenir.
 
-Satıcı ve fiyat, satırlardaki `Seller`/`Satıcı`/`Owner` ve `Price`/`Fiyat` gibi kelimelerden okunur; fiyat kelimesi yoksa ilk `$` ile başlayan tutar alınır. Sunucunun yazımı farklıysa `config/compasstri.properties` içine, ilk grubu satıcıyı ya da fiyatı veren kendi düzenli ifadeni yazabilirsin:
+**DonutSMP'de** `/ah` listesindeki ilanlarda sadece fiyat yazar (`$ 100M`), satıcı yazmaz; listeden eklenen waypoint'in adı bu yüzden `Lodestone $100M` olur. Satıcı, ilana **sağ tıklayınca** açılan onay penceresinde ("Are you sure you want to buy this?") yazar: waypoint'i oradan, fareyle pusulanın üstündeyken eklersen adı `_Restrict Lodestone 100M` gibi olur. Mod hiçbir şeye tıklamaz; pencerede **Yes**'e basmadıkça bir şey satın alınmaz.
+
+Satıcı ve fiyat, satırlardaki `Seller`/`Satıcı`/`Owner` ve `Price`/`Fiyat` gibi kelimelerden okunur; satıcı için o kelimeden sonraki ilk oyuncu adı alınır, `[VIP]` gibi rütbeler atlanır. Fiyat kelimesi yoksa ilk `$` ile başlayan tutar alınır. Sunucunun yazımı farklıysa `config/compasstri.properties` içine, ilk grubu satıcıyı ya da fiyatı veren kendi düzenli ifadeni yazabilirsin:
 
 ```
 sellerPattern=Satan\: (\S+)

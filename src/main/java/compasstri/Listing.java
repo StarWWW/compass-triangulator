@@ -25,6 +25,8 @@ public record Listing(@Nullable String seller, @Nullable String price) {
     /** "$1.5K", "$1,500,000", "$ 12.3M". */
     private static final Pattern MONEY = Pattern.compile("\\$\\s?[0-9][0-9.,]*\\s?[kKmMbBtT]?");
     private static final Pattern LEGACY_FORMAT = Pattern.compile("§.");
+    /** A Java player name, or a Bedrock one with its "." or "*" in front (as Floodgate shows them). */
+    private static final Pattern NAME = Pattern.compile("[.*]?[A-Za-z0-9_]{3,16}");
 
     /** The waypoint name: "Notch Lodestone $1.5K", leaving out what is not known. */
     public String waypointName() {
@@ -77,10 +79,16 @@ public record Listing(@Nullable String seller, @Nullable String price) {
         if (!m.find()) return null;
         String rest = line.substring(m.end()).replaceFirst("^[\\s:»>\\-–•|=]+", "").trim();
         if (rest.isEmpty()) rest = next;
-        // "by Notch (online)" -> "Notch"
-        int space = rest.indexOf(' ');
-        if (words == SELLER_WORDS && space > 0) rest = rest.substring(0, space);
-        return rest;
+        return words == SELLER_WORDS ? playerName(rest) : rest;
+    }
+
+    /** "[VIP] Notch (online)" -> "Notch": the first word that looks like a player name, skipping ranks. */
+    private static @Nullable String playerName(String text) {
+        for (String word : text.split("\\s+")) {
+            String w = word.replaceAll("[,;!?)\\]]+$", "");
+            if (NAME.matcher(w).matches()) return w;
+        }
+        return null;
     }
 
     private static @Nullable String group(String pattern, String line) {
