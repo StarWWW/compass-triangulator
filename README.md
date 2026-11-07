@@ -140,7 +140,7 @@ src/mc26.1/java, src/mc26.2/java   Minecraft sürümüne göre değişen birkaç
 versions/                      her Minecraft sürümü için bağımlılık sürümleri
 src/main/resources/            fabric.mod.json, dil dosyaları (19 dil), ikon
 src/test/java/compasstri/      JUnit testleri (üçgenleme, ilan satırları, dil dosyaları)
-tools/MakeIcon.java            logoyu üretir (AWT'li bir Java ile: java tools/MakeIcon.java)
+tools/MakeIcon.java            logoyu Minecraft'ın eşya tarzında üretir (AWT'li bir JDK ile: java tools/MakeIcon.java)
 ```
 
 ## Ayar dosyası
